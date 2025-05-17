@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Copify</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      width: 350px;
+    }
+    .form-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #d91212;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .toggle-btn {
+      background-color: #555;
+    }
+    .hidden {
+      display: none;
+    }
+    .message {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+    }
+    .home-btn {
+      margin-top: 20px;
+      background-color: #007bff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login Form -->
+    <form class="form-box" id="loginForm">
+      <h2>Login</h2>
+      <input type="text" id="loginUsername" placeholder="Username" required />
+      <input type="password" id="loginPassword" placeholder="Password" required />
+      <button type="submit">Login to Existing Account</button>
+      <button type="button" class="toggle-btn" onclick="toggleForms()">New User? Register</button>
+      <div class="message hidden" id="loginMessage"></div>
+    </form>
+
+    <!-- Registration Form -->
+    <form class="form-box hidden" id="registerForm">
+      <h2>Register</h2>
+      <input type="text" id="regName" placeholder="Full Name" required />
+      <input type="tel" id="regPhone" placeholder="Phone Number" required />
+      <input type="email" id="regEmail" placeholder="Email ID" required />
+      <input type="date" id="regDob" required />
+      <select id="regGender" required>
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="password" id="regPassword" placeholder="Create Password" required />
+      <button type="submit">Register</button>
+      <button type="button" class="toggle-btn" onclick="toggleForms()">Back to Login</button>
+      <div class="message hidden" id="registerMessage"></div>
+    </form>
+
+    <!-- Go to Home Button -->
+    <button class="home-btn hidden" id="homeBtn" onclick="window.location.href='business.html'">Go to Home Page</button>
+  </div>
+
+  <script>
+    function toggleForms() {
+      document.getElementById('loginForm').classList.toggle('hidden');
+      document.getElementById('registerForm').classList.toggle('hidden');
+      document.getElementById('loginMessage').classList.add('hidden');
+      document.getElementById('registerMessage').classList.add('hidden');
+      document.getElementById('homeBtn').classList.add('hidden');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (username && password) {
+        const msg = document.getElementById('loginMessage');
+        msg.textContent = "✅ Login successful (existing user)";
+        msg.classList.remove('hidden');
+        msg.classList.add('success');
+        document.getElementById('homeBtn').classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const phone = document.getElementById('regPhone').value;
+      const email = document.getElementById('regEmail').value;
+      const dob = document.getElementById('regDob').value;
+      const gender = document.getElementById('regGender').value;
+      const password = document.getElementById('regPassword').value;
+
+      if (name && phone && email && dob && gender && password) {
+        const msg = document.getElementById('registerMessage');
+        msg.textContent = `🎉 Welcome, ${name}! Registration successful.`;
+        msg.classList.remove('hidden');
+        msg.classList.add('success');
+        document.getElementById('homeBtn').classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

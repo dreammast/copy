@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Copify - Confirm Your Order</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .summary-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .summary-card h4 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .location-info {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .file-upload {
+      border: 2px dashed #ddd;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .file-upload.dragover {
+      border-color: #0d6efd;
+      background-color: #f8f9fa;
+    }
+    .file-preview {
+      margin-top: 10px;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    .file-item button {
+      padding: 2px 8px;
+    }
+    .payment-section {
+      display: none;
+      margin-top: 20px;
+    }
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: #d4edda;
+      color: #155724;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="index.html">Copify</a>
+  </div>
+</nav>
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="mb-4 text-center">Confirm Your Order</h2>
+
+    <div class="row">
+      <!-- Order Form -->
+      <div class="col-md-7">
+        <form id="orderForm" method="post" action="confirmOrder">
+          <div class="location-info">
+            <h5>Delivery Location</h5>
+            <p id="deliveryLocation">Loading location...</p>
+          </div>
+          
+          <div class="mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" id="phone" name="phone" class="form-control" placeholder="Enter your phone number" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email ID</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+          </div>
+
+          <!-- File Upload Section -->
+          <div class="mb-3">
+            <label class="form-label">Upload Documents</label>
+            <div class="file-upload" id="dropZone">
+              <p>Drag and drop files here or click to browse</p>
+              <input type="file" id="fileInput" multiple style="display: none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+              <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                Browse Files
+              </button>
+            </div>
+            <div id="filePreview" class="file-preview"></div>
+          </div>
+
+          <div class="mb-4">
+            <label for="paymentMode" class="form-label">Select Payment Mode</label>
+            <select id="paymentMode" name="paymentMode" class="form-select" required>
+              <option value="">---Choose Payment Mode---</option>
+              <option value="online">Online Payment</option>
+              <option value="giftcard">Gift Card</option>
+              <option value="cash">Cash on Delivery</option>
+            </select>
+          </div>
+
+          <!-- Payment Section -->
+          <div id="paymentSection" class="payment-section">
+            <div class="mb-3">
+              <label for="cardNumber" class="form-label">Card Number</label>
+              <input type="text" id="cardNumber" class="form-control" placeholder="Enter card number">
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label for="expiryDate" class="form-label">Expiry Date</label>
+                <input type="text" id="expiryDate" class="form-control" placeholder="MM/YY">
+              </div>
+              <div class="col-md-6">
+                <label for="cvv" class="form-label">CVV</label>
+                <input type="text" id="cvv" class="form-control" placeholder="CVV">
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <button type="button" class="btn btn-primary btn-lg" onclick="processOrder()">Process Order</button>
+          </div>
+        </form>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message">
+          <h4>Order Placed Successfully!</h4>
+          <p>Your order has been confirmed and payment processed.</p>
+          <p>Order ID: <span id="orderId"></span></p>
+          <a href="index.html" class="btn btn-success">Return to Home</a>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="col-md-5">
+        <div class="summary-card bg-light">
+          <h4>Order Summary</h4>
+          <div id="orderItems">
+            <!-- Items will be added dynamically -->
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <strong>Subtotal</strong>
+            <strong id="subtotal">$0.00</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Shipping</span>
+            <span id="shipping">$0.00</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <h5>Total</h5>
+            <h5 id="total">$0.00</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-primary text-white text-center py-3 mt-5">
+  <p>© 2025 Copify. All rights reserved.</p>
+</footer>
+
+<script>
+  let uploadedFiles = [];
+  let orderTotal = 0;
+
+  // File upload handling
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const filePreview = document.getElementById('filePreview');
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+  });
+
+  function handleFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!uploadedFiles.some(f => f.name === file.name)) {
+        uploadedFiles.push(file);
+        addFileToPreview(file);
+        updateOrderSummary();
+      }
+    });
+  }
+
+  function addFileToPreview(file) {
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    fileItem.innerHTML = `
+      <span>${file.name} (${formatFileSize(file.size)})</span>
+      <button type="button" class="btn btn-sm btn-danger" onclick="removeFile('${file.name}')">×</button>
+    `;
+    filePreview.appendChild(fileItem);
+  }
+
+  function removeFile(fileName) {
+    uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+    filePreview.innerHTML = '';
+    uploadedFiles.forEach(file => addFileToPreview(file));
+    updateOrderSummary();
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Payment mode handling
+  document.getElementById('paymentMode').addEventListener('change', function(e) {
+    const paymentSection = document.getElementById('paymentSection');
+    if (e.target.value === 'online') {
+      paymentSection.style.display = 'block';
+    } else {
+      paymentSection.style.display = 'none';
+    }
+  });
+
+  // Update order summary
+  function updateOrderSummary() {
+    const orderItems = document.getElementById('orderItems');
+    orderItems.innerHTML = '';
+    
+    let subtotal = 0;
+    uploadedFiles.forEach((file, index) => {
+      const price = calculateFilePrice(file);
+      subtotal += price;
+      
+      const item = document.createElement('li');
+      item.className = 'list-group-item d-flex justify-content-between';
+      item.innerHTML = `
+        <span>Document ${index + 1} (${file.name})</span>
+        <strong>$${price.toFixed(2)}</strong>
+      `;
+      orderItems.appendChild(item);
+    });
+
+    document.getElementById('subtotal').textContent = $${subtotal.toFixed(2)};
+    document.getElementById('total').textContent = $${subtotal.toFixed(2)};
+    orderTotal = subtotal;
+  }
+
+  function calculateFilePrice(file) {
+    // Basic pricing logic - you can modify this based on your requirements
+    const basePrice = 5.00;
+    const sizePrice = file.size / (1024 * 1024) * 0.5; // $0.5 per MB
+    return basePrice + sizePrice;
+  }
+
+  // Process order
+  function processOrder() {
+    if (uploadedFiles.length === 0) {
+      alert('Please upload at least one document');
+      return;
+    }
+
+    const paymentMode = document.getElementById('paymentMode').value;
+    if (paymentMode === 'online') {
+      const cardNumber = document.getElementById('cardNumber').value;
+      const expiryDate = document.getElementById('expiryDate').value;
+      const cvv = document.getElementById('cvv').value;
+
+      if (!cardNumber || !expiryDate || !cvv) {
+        alert('Please fill in all payment details');
+        return;
+      }
+    }
+
+    // Simulate payment processing
+    setTimeout(() => {
+      const orderId = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      document.getElementById('orderId').textContent = orderId;
+      document.getElementById('orderForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'block';
+    }, 2000);
+  }
+
+  // Get location from URL parameters
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const location = urlParams.get('location');
+    if (location) {
+      document.getElementById('deliveryLocation').textContent = location;
+    } else {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          fetch(https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyDL9c1PMKR9Y8P68aFnt2rc_VM3TX5aT5M)
+            .then(response => response.json())
+            .then(data => {
+              if (data.results && data.results[0]) {
+                document.getElementById('deliveryLocation').textContent = data.results[0].formatted_address;
+              }
+            });
+        });
+      }
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

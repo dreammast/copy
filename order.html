@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copify - Confirm Your Order</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fff;
+      color: #333;
+    }
+    .navbar, footer {
+      background-color: #d91212;
+      color: white;
+    }
+    .summary-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .file-upload {
+      border: 2px dashed #ddd;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px;
+    }
+    .file-upload.dragover {
+      border-color: #d91212;
+      background-color: #f8f9fa;
+    }
+    .payment-section {
+      display: none;
+    }
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: #d4edda;
+      color: #155724;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    .ratio {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand text-white" href="index.html">Copify</a>
+  </div>
+</nav>
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="mb-4 text-center">Confirm Your Order</h2>
+    <div class="row">
+      <div class="col-md-7">
+        <form id="orderForm">
+          <div class="mb-3">
+            <label for="location" class="form-label">Enter Your Location:</label>
+            <input type="text" id="location" class="form-control" placeholder="e.g., New York, NY">
+            <button onclick="findLocation()" type="button" class="btn btn-outline-danger mt-2">Show on Map</button>
+          </div>
+
+          <div class="ratio ratio-16x9">
+            <iframe id="map" src="https://maps.google.com/maps?q=New York&output=embed" allowfullscreen></iframe>
+          </div>
+
+          <div class="mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" id="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" id="phone" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" class="form-control" required>
+          </div>
+
+          <div class="file-upload" id="dropZone">
+            <p>Drag and drop files here or click to browse</p>
+            <input type="file" id="fileInput" multiple hidden>
+            <button type="button" class="btn btn-outline-danger" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+          </div>
+          <div id="filePreview"></div>
+
+          <div class="mb-3">
+            <label for="paymentMode" class="form-label">Select Payment Mode</label>
+            <select id="paymentMode" class="form-select">
+              <option value="">---Choose Payment Mode---</option>
+              <option value="online">Online Payment</option>
+              <option value="giftcard">Gift Card</option>
+              <option value="cash">Cash on Delivery</option>
+            </select>
+          </div>
+
+          <div id="paymentSection" class="payment-section">
+            <div class="mb-3">
+              <label for="cardNumber" class="form-label">Card Number</label>
+              <input type="text" id="cardNumber" class="form-control">
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label for="expiryDate" class="form-label">Expiry Date</label>
+                <input type="text" id="expiryDate" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label for="cvv" class="form-label">CVV</label>
+                <input type="text" id="cvv" class="form-control">
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <button type="button" class="btn btn-danger btn-lg" onclick="processOrder()">Make Payment</button>
+          </div>
+        </form>
+
+        <div id="successMessage" class="success-message">
+          <h4>Order Placed Successfully!</h4>
+          <p>Your order has been confirmed and payment processed.</p>
+          <p>Order ID: <span id="orderId"></span></p>
+          <a href="index.html" class="btn btn-success">Back to Home</a>
+        </div>
+      </div>
+
+      <div class="col-md-5">
+        <div class="summary-card">
+          <h4>Order Summary</h4>
+          <ul id="orderItems" class="list-group mb-3"></ul>
+          <div class="d-flex justify-content-between">
+            <span>Subtotal:</span><strong id="subtotal">$0.00</strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Shipping:</span><strong id="shipping">$0.00</strong>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span>Total:</span><strong id="total">$0.00</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="text-center py-3">
+  <p>&copy; 2025 Copify. All rights reserved.</p>
+</footer>
+
+<script>
+function findLocation() {
+  const location = document.getElementById('location').value;
+  const mapFrame = document.getElementById('map');
+  const url = "https://maps.google.com/maps?q=" + encodeURIComponent(location) + "&output=embed";
+  mapFrame.src = url;
+}
+
+let uploadedFiles = [];
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!uploadedFiles.some(f => f.name === file.name)) {
+      uploadedFiles.push(file);
+      const item = document.createElement('div');
+      item.className = 'd-flex justify-content-between bg-light p-2 mb-1';
+      item.innerHTML = `<span>${file.name}</span><span>${(file.size/1024/1024).toFixed(2)} MB</span>`;
+      document.getElementById('filePreview').appendChild(item);
+    }
+  });
+  updateOrderSummary();
+}
+
+document.getElementById('fileInput').addEventListener('change', (e) => handleFiles(e.target.files));
+
+document.getElementById('dropZone').addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.target.classList.add('dragover');
+});
+
+document.getElementById('dropZone').addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.target.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+document.getElementById('paymentMode').addEventListener('change', (e) => {
+  document.getElementById('paymentSection').style.display = e.target.value === 'online' ? 'block' : 'none';
+});
+
+function updateOrderSummary() {
+  const orderItems = document.getElementById('orderItems');
+  orderItems.innerHTML = '';
+  let subtotal = 0;
+  uploadedFiles.forEach((file, i) => {
+    const price = 5 + file.size / (1024 * 1024) * 0.5;
+    subtotal += price;
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between';
+    li.innerHTML = `<span>Document ${i + 1}</span><span>$${price.toFixed(2)}</span>`;
+    orderItems.appendChild(li);
+  });
+  document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+  document.getElementById('total').textContent = `$${subtotal.toFixed(2)}`;
+}
+
+function processOrder() {
+  if (uploadedFiles.length === 0) return alert('Please upload files.');
+  const paymentMode = document.getElementById('paymentMode').value;
+  if (paymentMode === 'online') {
+    const cardNumber = document.getElementById('cardNumber').value;
+    const expiryDate = document.getElementById('expiryDate').value;
+    const cvv = document.getElementById('cvv').value;
+    if (!cardNumber || !expiryDate || !cvv) return alert('Fill in payment details.');
+  }
+  setTimeout(() => {
+    document.getElementById('orderId').textContent = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    document.getElementById('orderForm').style.display = 'none';
+    document.getElementById('successMessage').style.display = 'block';
+  }, 1500);
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
